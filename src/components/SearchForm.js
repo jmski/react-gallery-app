@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
+import { withRouter } from 'react-router-dom';
 
-export default class SearchForm extends Component {
+class SearchForm extends Component {
 
     state = {
         searchText: ''
@@ -12,6 +13,7 @@ export default class SearchForm extends Component {
 
     handleSubmit = e => {
         e.preventDefault();
+        this.props.history.push(`/search/${this.query.value}`);
         this.props.onSearch(this.query.value);
         e.currentTarget.reset();
     }
@@ -19,14 +21,17 @@ export default class SearchForm extends Component {
     render() {
         return (
             <form className="search-form" onSubmit={this.handleSubmit} >
-            <label className="is-hidden" htmlFor="search">Search</label>
-            <input type="search" 
-                onChange={this.onSearchChange}
-                name="search" 
-                ref={(input) => this.query = input}
-                placeholder="Search..." />
-            <button type="submit" id="submit" className="search-button"><i className="material-icons icn-search">search</i></button>
+                <input 
+                    type="search" 
+                    onChange={this.onSearchChange}
+                    name="search" 
+                    ref={(input) => this.query = input}
+                    placeholder="Search..."
+                    required />
+            <button type="submit" id="submit" className="search-button"><i className="material-icons icon-search">Submit</i></button>
         </form>   
         )
     }
-}
+};
+
+export default withRouter(SearchForm);
