@@ -1,14 +1,16 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, HashRouter, Link } from 'react-router-dom';
 
-const Nav = () => (
-    <nav className="main-nav">
-        <ul>
-            <li><NavLink to="/search/cars">Cars</NavLink></li>
-            <li><NavLink to="/search/dogs">Dogs</NavLink></li>
-            <li><NavLink to="/search/toronto">Toronto</NavLink></li>
-        </ul>
-    </nav>
-);
+const Nav = (props) => (
+            <HashRouter>
+                <nav className="main-nav">
+                    <ul>
+                        <li><NavLink tag={Link} to="/taco" onClick={() => props.fetchData('taco')}>Taco</NavLink></li>
+                        <li><NavLink tag={Link} to="/tattoo" onClick={() => props.fetchData('tattoo')}>Tattoo</NavLink></li>
+                        <li><NavLink tag={Link} to="/toronto" onClick={() => props.fetchData('toronto')}>Toronto</NavLink></li>
+                    </ul>
+                </nav>
+            </HashRouter>
+        );
 
 export default Nav;

@@ -1,112 +1,67 @@
+//stateful class component
 import React, { Component } from 'react';
-import { BrowserRouter, Route, Switch } from 'react-router-dom';
-
-import apiKey from './config';
+import './css/index.css';
 import axios from 'axios';
+import apiKey from './config';
+import { HashRouter, Route, Switch, Redirect } from 'react-router-dom';
 
+//importing components
 import SearchForm from './components/SearchForm';
-import Gallery from './components/Gallery';
 import Nav from './components/Nav';
+import Gallery from './components/Gallery';
+import NotFound from './components/NotFound';
 
-class App extends Component {
+export default class App extends Component {
+  
+  constructor(props) {
+    //binding this keyword to this class
+    super(props);
+    //setting state to make a place for the Flickr data to go
+    this.state = {
+      photos: [],
+      queryContent: '',
+      loading: true
+    }
+  }
 
-	constructor() {
-		super();
-		this.state = {
-			searchQuery: [ ],
-			photosCars: [ ],
-			photosDogs: [ ],
-			photosToronto: [ ],
-			isLoading: true,
-			query: ''
-		};
-	} 
+  //method to search the Flickr API from the search form in SearchBar.js
+  //creating it as an arrow function to auto bind this keyword.
+  search = (query) => {
+    //storing the call in a variable to make it cleaner
+    const apiLink = `https://www.flickr.com/services/rest/?method=flickr.photos.search&api_key=${apiKey}&tags=${query}&per_page=24&format=json&nojsoncallback=1`;
 
-	componentDidMount() {
-		this.performSearch();
-	}
+    //api call
+    axios.get(apiLink)
+      .then(response => {
+        this.setState({
+          photos: response.data.photos.photo,
+          queryContent: query,
+          loading: false
+        });
+      })
+      .catch(error => {
+        console.log('Error fetching and parsing data: ', error);
+      });
 
-	componentDidUpdate() {
-		console.log(this.props.data);
-		console.log(this.props.onSearch);
-	 }
+    //resetting loading to true so that loading... shows on any API call load.
+    this.setState({loading: true});
+  }
 
-	 // does the format matter? Testing
-	// https://www.flickr.com/services/rest/?method=flickr.photos.search?q=${query}&limit=24&api_key=${apiKey}&format=json&nojsoncallback=1
-
-	performSearch = (query) => {
-		axios.get(`https://www.flickr.com/services/rest/?method=flickr.photos.search&api_key=${apiKey}&tags=cars&per_page=24&format=json&nojsoncallback=1`)
-			.then(response => {
-				this.setState({
-					photosCars: response.data.photos.photo
-				});
-			})
-			.catch(error => {
-				console.log('Error fetching and parsing data', error);
-			});
-
-		axios.get(`https://www.flickr.com/services/rest/?method=flickr.photos.search&api_key=${apiKey}&tags=dogs&per_page=24&format=json&nojsoncallback=1`)
-			.then(response => {
-				this.setState({
-					photosDogs: response.data.photos.photo
-				});
-			})
-			.catch(error => {
-				console.log('Error fetching and parsing data', error);
-			});
-		
-		axios.get(`https://www.flickr.com/services/rest/?method=flickr.photos.search&api_key=${apiKey}&tags=toronto&per_page=24&format=json&nojsoncallback=1`)
-			.then(response => {
-				this.setState({
-					photosToronto: response.data.photos.photo
-				});
-			})
-			.catch(error => {
-				console.log('Error fetching and parsing data', error);
-			});
-
-		axios.get(`https://www.flickr.com/services/rest/?method=flickr.photos.search&api_key=${apiKey}&tags${query}&per_page=24&format=json&nojsoncallback=1`)
-			.then(response => {
-				this.setState({
-					searchQuery: response.data.photos.photo,
-					loading: false,
-					query: query
-				});
-			})
-			.catch(error => {
-				console.log('Error fetching and parsing data', error);
-			})
-		}
-
-		resetLoading = () => {
-			this.setState({
-				loading: true
-			});
-		}
-
-	render() { 
-		console.log(this.state.searchQuery);
-		return (
-			<div className="container">
-				<BrowserRouter>
-					<SearchForm onSearch={this.performSearch} />
-					<Nav />
-					{
-						(this.state.isLoading)
-						? <h1>Loading...</h1>
-						:
-						<Switch>
-							<Route exact path="/search/cars" render={ () => <Gallery data={this.state.photosCars.photos} /> } />
-							<Route exact path="/search/dogs" render={ () => <Gallery data={this.state.photosDogs.photos} /> } />
-							<Route exact path="/search/toronto" render={ () => <Gallery data={this.state.photosToronto.photos} /> } />
-							<Route path="/search/:query" render={ () => <Gallery data={this.state.searchQuery} /> } />
-					  </Switch>
-					}
-
-				</BrowserRouter>
-			</div>
-		)
-	}
-};
-
-export default App;
+  render() {
+	  console.log(this.state.queryContent);
+    return (
+      <HashRouter>
+        <div className="container">
+          <SearchForm onSearch={this.search} loading={this.state.loading} />
+          <Nav fetchData={this.search} />
+          <Switch>
+            <Route exact path="/" render={ () => <Redirect to="/taco" />} />
+            <Route exact path="/search/:searchtext" render={ (props) => <Gallery {...props} data={this.state.photos} query={this.state.queryContent} loading={this.state.loading} fetchData={this.search} />} />
+            <Route path="/(taco|tattoo|toronto)" render={ (props) => <Gallery {...props} data={this.state.photos} query={this.state.queryContent} loading={this.state.loading} fetchData={this.search} />} />
+            <Route component={NotFound} />
+          </Switch>
+        </div>
+      </HashRouter>
+    );
+  }
+}
